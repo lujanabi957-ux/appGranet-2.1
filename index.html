@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Granet - Monitoreo de Silobolsas</title>
+
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Carga completa de Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuración PWA -->
+    <!-- Configuración PWA y Compatibilidad Xiaomi/Redmi -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2E7D32">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Granet">
+    <link rel="apple-touch-icon" href="./logo192.png">
+</head>
+
+<body>
+
+    <!-- =========================================================
+         PANTALLA LOGIN / REGISTRO
+    ========================================================= -->
+    <section id="login" class="pantalla-seccion">
+        <div class="login-contenedor">
+            <div class="login-header">
+                <div class="logo-contenedor">
+                    <img src="logo.png" alt="Logo Granet" class="logo-app">
+                </div>
+                <p class="tagline">Protección inteligente para silobolsas</p>
+
+                <!-- PESTAÑAS -->
+                <div class="pestanias-auth">
+                    <button type="button" id="tab-login" class="btn-tab active" onclick="cambiarModoAuth('login')">
+                        Iniciar sesión
+                    </button>
+                    <button type="button" id="tab-registro" class="btn-tab" onclick="cambiarModoAuth('registro')">
+                        Crear cuenta
+                    </button>
+                </div>
+            </div>
+
+            <!-- FORMULARIO -->
+            <form id="form-auth" class="login-form">
+                <h3 id="auth-titulo">¡Bienvenido!</h3>
+                <p id="auth-subtitulo" class="version">Ingresá tus credenciales para acceder.</p>
+
+                <div class="input-grupo">
+                    <label for="auth-email">Usuario / Email</label>
+                    <input type="email" id="auth-email" placeholder="usuario@ejemplo.com" required>
+                </div>
+
+                <div class="input-grupo" id="campo-password">
+                    <label for="auth-password">Contraseña</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
+                </div>
+
+                <button type="submit" class="btn-principal" id="btn-auth-submit">
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <div class="opciones-auth">
+                <a href="#" class="recuperar" id="link-olvido" onclick="cambiarModoAuth('recuperar')">
+                    ¿Olvidaste tu contraseña?
+                </a>
+                <p id="texto-cambio-modo">
+                    ¿No tenés cuenta?
+                    <a href="#" class="recuperar-link" onclick="cambiarModoAuth('registro')">Registrate acá</a>
+                </p>
+                <a href="#" class="recuperar seccion-oculta" id="link-volver" onclick="cambiarModoAuth('login')">
+                    <span class="material-symbols-outlined icono-inline">arrow_back</span> Volver al inicio de sesión
+                </a>
+            </div>
+
+            <p class="version">Versión 1.0</p>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         APLICACIÓN PRINCIPAL
+    ========================================================= -->
+    <div id="pantalla-app" class="seccion-oculta contenedor-app">
+
+        <!-- BARRA DE NAVEGACIÓN SUPERIOR ADMIN -->
+        <nav id="nav-admin-top" class="nav-admin-top solo-admin seccion-oculta">
+            <span class="badge-admin">MODO ADMIN</span>
+            <button type="button" onclick="navegarA('administrador')">
+                <span class="material-symbols-outlined icono-btn">admin_panel_settings</span> Panel Admin
+            </button>
+            <button type="button" onclick="navegarA('clientes')">
+                <span class="material-symbols-outlined icono-btn">group</span> Clientes y Campos
+            </button>
+            <button type="button" onclick="navegarA('silos')">
+                <span class="material-symbols-outlined icono-btn">inventory_2</span> Silos y Varas
+            </button>
+            <button type="button" onclick="navegarA('simulacion')">
+                <span class="material-symbols-outlined icono-btn">science</span> Simulación
+            </button>
+        </nav>
+
+        <!-- =========================================================
+             HOME / INICIO
+        ========================================================= -->
+        <section id="home" class="pantalla-seccion seccion-oculta">
+            <header class="app-header">
+                <div class="header-logo-container">
+                    <img src="logo.png" alt="Logo Granet" class="logo-header-img">
+                </div>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <main class="app-contenido">
+                <div class="seccion-titulo">
+                    <h3>Estado de Silobolsas</h3>
+                    <p>Seleccioná un silo para ver detalles técnicos en tiempo real.</p>
+                </div>
+
+                <div id="lista-silos-home" class="grid-silos">
+                    <p class="cargando-texto">Cargando silobolsas...</p>
+                </div>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             DETALLE DE SILOBOLSA
+        ========================================================= -->
+       <!-- =========================================================
+     DETALLE DE SILOBOLSA (JERARQUÍA COMPLETA Y MEDICIONES)
+========================================================= -->
+<!-- =========================================================
+     DETALLE DE SILOBOLSA (JERARQUÍA COMPLETA Y MEDICIONES)
+========================================================= -->
+<section id="detalle-silobolsa" class="pantalla-seccion seccion-oculta">
+    <header class="app-header header-con-volver">
+        <button type="button" class="btn-volver" onclick="navegarA('home')">
+            <span class="material-symbols-outlined icono-btn">arrow_back</span> Volver
+        </button>
+        <h2 id="detalle-silo-titulo">Silobolsa</h2>
+        <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+            <span class="material-symbols-outlined icono-btn">logout</span> Salir
+        </button>
+    </header>
+
+    <main class="app-contenido">
+        <!-- FICHA DE JERARQUÍA COMPLETA -->
+        <div class="tarjeta-mapa-css">
+            <div class="mapa-header mapa-header-jerarquia">
+               <div class="mapa-fila">
+    <span>
+        <span class="material-symbols-outlined icono-inline">person</span>
+        <strong>Cliente:</strong> <span id="info-cliente-nombre">Cargando...</span>
+    </span>
+    <span id="info-silo-grano" class="badge">--</span>
+</div>
+<div class="mapa-fila">
+    <span>
+        <span class="material-symbols-outlined icono-inline">location_on</span>
+        <strong>Campo:</strong> <span id="info-campo-nombre">Cargando...</span>
+    </span>
+    <small>
+        <span class="material-symbols-outlined icono-inline">schedule</span>
+        <strong>Última Lectura:</strong> <span id="info-ultima-fecha">--/--/---- --:--</span>
+    </small>
+</div>
+            </div>
+            <div class="mapa-placeholder mapa-placeholder-mini">
+                <span class="material-symbols-outlined pin-gps">sensors</span>
+                <p id="info-vara-posicion">Lanza sensora conectada</p>
+            </div>
+        </div>
+
+        <!-- ESTADO ACTUAL DE SENSORES -->
+        <div class="seccion-titulo">
+            <h3>Lectura Actual de Sensores</h3>
+        </div>
+
+        <div class="grid-detalles">
+            <div class="tarjeta-detalle">
+                <h3><span class="material-symbols-outlined icono-tarjeta">thermostat</span> Temperatura Interna</h3>
+                <div class="fila-dato"><span>Sensor 1 (Cabecera)</span><span class="valor" id="val-temp-1">--</span></div>
+                <div class="fila-dato"><span>Sensor 2 (Centro)</span><span class="valor" id="val-temp-2">--</span></div>
+                <div class="fila-dato"><span>Sensor 3 (Cola)</span><span class="valor" id="val-temp-3">--</span></div>
+            </div>
+
+            <div class="tarjeta-detalle">
+                <h3><span class="material-symbols-outlined icono-tarjeta">water_drop</span> Humedad Interna</h3>
+                <div class="fila-dato"><span>Sensor 1 (Cabecera)</span><span class="valor" id="val-hum-1">--</span></div>
+                <div class="fila-dato"><span>Sensor 2 (Centro)</span><span class="valor" id="val-hum-2">--</span></div>
+                <div class="fila-dato"><span>Sensor 3 (Cola)</span><span class="valor" id="val-hum-3">--</span></div>
+            </div>
+
+            <div class="tarjeta-detalle">
+                <h3><span class="material-symbols-outlined icono-tarjeta">vibration</span> Acelerómetro / Movimiento</h3>
+                <div class="fila-dato"><span>Estado Movimiento</span><span id="val-mov-1">--</span></div>
+                <div class="fila-dato"><span>Temp. Externa</span><span class="valor" id="val-temp-ext">--</span></div>
+                <div class="fila-dato"><span>Humedad Externa</span><span class="valor" id="val-hum-ext">--</span></div>
+            </div>
+        </div>
+
+        <!-- HISTORIAL DE MEDICIONES DEL DÍA -->
+        <div class="seccion-titulo">
+            <h3>Historial de Lecturas Recientes (Últimas 24 hs)</h3>
+        </div>
+
+        <div class="tarjeta-form tarjeta-tabla-container">
+            <div id="contenedor-mediciones-dia">
+                <p class="cargando-texto">Cargando historial de lecturas...</p>
+            </div>
+        </div>
+    </main>
+</section>
+
+<!-- =========================================================
+             ALERTAS (LIMPIO DE HARDCODEOS)
+        ========================================================= -->
+        <section id="alertas" class="pantalla-seccion seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('home')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Volver
+                </button>
+                <h2>Alertas Recientes</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <main class="app-contenido">
+                <p class="cargando-texto">Cargando alertas del sistema...</p>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             DETALLE DE ALERTA
+        ========================================================= -->
+        <section id="detalle-alerta" class="pantalla-seccion seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('alertas')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Volver
+                </button>
+                <h2>Diagnóstico de Alerta</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <main class="app-contenido">
+                <div class="info-alerta-box">
+                    <h3 id="diag-silo-nombre">Silobolsa</h3>
+                    <p class="alerta-badge-rojo" id="diag-alerta-tipo"><span class="material-symbols-outlined icono-inline">warning</span> Diagnóstico en curso</p>
+                </div>
+
+                <div class="tarjeta-detalle">
+                    <h3><span class="material-symbols-outlined icono-tarjeta">analytics</span> Resumen de Medición</h3>
+                    <div class="dato-alerta"><span>Barra / Lanza:</span><strong id="diag-lanza">--</strong></div>
+                    <div class="dato-alerta"><span>Hora de registro:</span><strong id="diag-hora">--</strong></div>
+                    <div class="dato-alerta"><span>Valor detectado:</span><strong class="texto-rojo" id="diag-valor">--</strong></div>
+                </div>
+
+                <button type="button" class="btn-principal" onclick="navegarA('alertas')">
+                    Volver a la lista de Alertas
+                </button>
+            </main>
+        </section>
+
+      
+        <!-- =========================================================
+             HISTORIAL DETALLADO SILOBOLSA
+        ========================================================= -->
+       <!-- =========================================================
+     HISTORIAL Y TENDENCIAS CON FILTROS INTELIGENTES
+========================================================= -->
+<section id="historial" class="pantalla-seccion seccion-oculta">
+    <header class="app-header header-con-volver">
+        <button type="button" class="btn-volver" onclick="navegarA('home')">
+            <span class="material-symbols-outlined icono-btn">arrow_back</span> Volver
+        </button>
+        <h2>Historial y Tendencias de Sensores</h2>
+        <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+            <span class="material-symbols-outlined icono-btn">logout</span> Salir
+        </button>
+    </header>
+
+    <main class="app-contenido">
+        <!-- BARRA DE FILTROS DE BÚSQUEDA -->
+        <div class="tarjeta-form" style="margin-bottom: 20px;">
+            <h3><span class="material-symbols-outlined icono-tarjeta">filter_alt</span> Filtrar Historial</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                
+                <div class="input-grupo" style="margin-bottom: 0;">
+                    <label for="filtro-cliente">Cliente / Productor</label>
+                    <select id="filtro-cliente" onchange="filtrarCamposPorCliente()">
+                        <option value="">Todos los clientes...</option>
+                    </select>
+                </div>
+
+                <div class="input-grupo" style="margin-bottom: 0;">
+                    <label for="filtro-silo">Silobolsa Objetivo</label>
+                    <select id="filtro-silo">
+                        <option value="">Seleccionar silobolsa...</option>
+                    </select>
+                </div>
+
+                <div class="input-grupo" style="margin-bottom: 0;">
+                    <label for="filtro-desde">Desde la fecha</label>
+                    <input type="date" id="filtro-desde">
+                </div>
+
+                <div class="input-grupo" style="margin-bottom: 0;">
+                    <label for="filtro-hasta">Hasta la fecha</label>
+                    <input type="date" id="filtro-hasta">
+                </div>
+            </div>
+
+            <button type="button" class="btn-principal" style="margin-top: 15px;" onclick="buscarHistorialFiltrado()">
+                 Consultar Historial y Evolución
+            </button>
+        </div>
+
+        <!-- CONTENEDOR DE RESULTADOS / TENDENCIAS -->
+        <div id="resultado-historial-contenedor">
+            <p class="cargando-texto" style="text-align: center; padding: 20px;">Utilizá los filtros superiores para consultar el comportamiento de los silos.</p>
+        </div>
+    </main>
+</section>
+        <!-- =========================================================
+             AJUSTES
+        ========================================================= -->
+        <section id="ajustes" class="pantalla-seccion seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('home')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Volver
+                </button>
+                <h2>Mi Cuenta y Configuración</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <main class="app-contenido">
+                <div class="tarjeta-detalle">
+                    <h3><span class="material-symbols-outlined icono-tarjeta">person</span> Usuario Actual</h3>
+                    <p id="user-email-display" class="texto-usuario">Cargando...</p>
+                    <span id="user-rol-badge" class="badge">CLIENTE</span>
+                </div>
+
+                <div class="tarjeta-detalle">
+                    <h3><span class="material-symbols-outlined icono-tarjeta">notifications_active</span> Preferencias de Alertas</h3>
+                    <label class="switch-item"><span>Alertas de Temperatura</span><input type="checkbox" checked></label>
+                    <label class="switch-item"><span>Alertas de Humedad</span><input type="checkbox" checked></label>
+                    <label class="switch-item"><span>Alertas de Movimiento</span><input type="checkbox" checked></label>
+                </div>
+
+                <div class="tarjeta-detalle">
+                    <h3><span class="material-symbols-outlined icono-tarjeta">info</span> Información del Sistema</h3>
+                    <p><strong>PWA Granet:</strong> Versión 1.0</p>
+                    <p><strong>Base de Datos:</strong> Conectado a Supabase</p>
+                </div>
+
+                <button type="button" class="btn-cerrar" onclick="cerrarSesion()">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Cerrar sesión
+                </button>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             PANEL ADMINISTRACIÓN (SOLO ADMIN)
+        ========================================================= -->
+        <section id="administrador" class="pantalla-seccion solo-admin seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('home')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Volver
+                </button>
+                <h2>Panel de Administración</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <main class="app-contenido">
+                <!-- TARJETAS DE MÉTRICAS (KPIs) -->
+                <div class="grid-metricas">
+                    <div class="tarjeta-metrica">
+                        <span class="material-symbols-outlined icono-metrica">inventory_2</span>
+                        <div>
+                            <h4 id="stat-total-silos">--</h4>
+                            <p>Silobolsas Totales</p>
+                        </div>
+                    </div>
+                    <div class="tarjeta-metrica">
+                        <span class="material-symbols-outlined icono-metrica">group</span>
+                        <div>
+                            <h4 id="stat-total-clientes">--</h4>
+                            <p>Clientes Activos</p>
+                        </div>
+                    </div>
+                    <div class="tarjeta-metrica alerta-bg">
+                        <span class="material-symbols-outlined icono-metrica icono-rojo">warning</span>
+                        <div>
+                            <h4 id="stat-total-alertas">--</h4>
+                            <p>Alertas Críticas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACCESOS DE GESTIÓN RÁPIDA -->
+                <div class="seccion-titulo" style="margin-top: 25px;">
+                    <h3>Gestión del Sistema</h3>
+                    <p>Seleccioná una sección para administrar los registros.</p>
+                </div>
+
+                <div class="grid-silos" style="margin-top: 15px;">
+                    <div class="tarjeta-silo" onclick="navegarA('clientes')">
+                        <div class="silo-info">
+                            <h3><span class="material-symbols-outlined icono-inline">group</span> Clientes y Campos</h3>
+                            <p>Gestión de usuarios y predios agrícolas</p>
+                        </div>
+                        <span class="material-symbols-outlined flecha">chevron_right</span>
+                    </div>
+
+                    <div class="tarjeta-silo" onclick="navegarA('silos')">
+                        <div class="silo-info">
+                            <h3><span class="material-symbols-outlined icono-inline">inventory_2</span> Silobolsas y Varas</h3>
+                            <p>Gestión de estructuras y varas sensoras</p>
+                        </div>
+                        <span class="material-symbols-outlined flecha">chevron_right</span>
+                    </div>
+
+                    <div class="tarjeta-silo" onclick="navegarA('simulacion')">
+                        <div class="silo-info">
+                            <h3><span class="material-symbols-outlined icono-inline">science</span> Simulador de Sensores</h3>
+                            <p>Inyectar datos de prueba a la base de datos</p>
+                        </div>
+                        <span class="material-symbols-outlined flecha">chevron_right</span>
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             GESTIÓN DE CLIENTES Y CAMPOS (ADMIN)
+        ========================================================= -->
+        <section id="clientes" class="pantalla-seccion solo-admin seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('administrador')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Admin
+                </button>
+                <h2>Clientes y Campos</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <div class="pestanias-subseccion">
+                <button type="button" id="tab-sub-clientes" class="btn-subtab active" onclick="cambiarSubpestania('clientes')">
+                    <span class="material-symbols-outlined icono-btn">person</span> Clientes
+                </button>
+                <button type="button" id="tab-sub-campos" class="btn-subtab" onclick="cambiarSubpestania('campos')">
+                    <span class="material-symbols-outlined icono-btn">landscape</span> Campos
+                </button>
+            </div>
+
+            <main class="app-contenido">
+                <!-- VISTA 1: GESTIÓN DE CLIENTES -->
+                <div id="vista-sub-clientes">
+                    <div class="tarjeta-form">
+                        <h3><span class="material-symbols-outlined icono-tarjeta">person_add</span> Registrar Nuevo Cliente</h3>
+                        <form id="form-clientes">
+                            <div class="input-grupo"><label for="nombre">Nombre</label><input type="text" id="nombre" required></div>
+                            <div class="input-grupo"><label for="apellido">Apellido</label><input type="text" id="apellido" required></div>
+                            <div class="input-grupo"><label for="tel">Teléfono</label><input type="text" id="tel" required></div>
+                            <div class="input-grupo"><label for="mail">Correo Electrónico</label><input type="email" id="mail" required></div>
+                            <div class="input-grupo"><label for="direccion">Dirección</label><input type="text" id="direccion" required></div>
+                            
+                            <input type="hidden" id="rol" value="cliente">
+                            <button type="submit" class="btn-principal" id="btn-guardar">Guardar Cliente</button>
+                        </form>
+                    </div>
+
+                    <div class="lista-container">
+                        <h3>Clientes Registrados</h3>
+                        <div id="contenedor-cliente"></div>
+                    </div>
+                </div>
+
+                <!-- VISTA 2: GESTIÓN DE CAMPOS -->
+                <div id="vista-sub-campos" class="seccion-oculta">
+                    <div class="tarjeta-form">
+                        <h3><span class="material-symbols-outlined icono-tarjeta">landscape</span> Registrar Nuevo Campo</h3>
+                        <form id="form-campo">
+                            <div class="input-grupo">
+                                <label for="cliente-id">Cliente Asignado</label>
+                                <select id="cliente-id" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                </select>
+                            </div>
+                            <div class="input-grupo"><label for="nombre-campo">Nombre del Campo</label><input type="text" id="nombre-campo" placeholder="Ej: La Esperanza" required></div>
+                            <div class="input-grupo"><label for="ubicacion">Ubicación / Partido</label><input type="text" id="ubicacion" placeholder="Ej: Tandil, Buenos Aires" required></div>
+                            <div class="input-grupo">
+                                <label for="estado">Estado del Campo</label>
+                                <select id="estado" required>
+                                    <option value="activo" selected>Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-principal" id="btn-guardar-campo">Guardar Campo</button>
+                        </form>
+                    </div>
+
+                    <div class="lista-container">
+                        <h3>Campos Registrados</h3>
+                        <div id="contenedor-campos"></div>
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             GESTIÓN DE SILOS Y VARAS (ADMIN)
+        ========================================================= -->
+        <section id="silos" class="pantalla-seccion solo-admin seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('administrador')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Admin
+                </button>
+                <h2>Silobolsas y Varas</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <div class="pestanias-subseccion">
+                <button type="button" id="tab-sub-silos" class="btn-subtab active" onclick="cambiarSubpestaniaSilos('silos')">
+                    <span class="material-symbols-outlined icono-btn">inventory_2</span> Silobolsas
+                </button>
+                <button type="button" id="tab-sub-varas" class="btn-subtab" onclick="cambiarSubpestaniaSilos('varas')">
+                    <span class="material-symbols-outlined icono-btn">sensors</span> Varas Sensoras
+                </button>
+            </div>
+
+            <main class="app-contenido">
+                <!-- VISTA 1: GESTIÓN DE SILOBOLSAS -->
+                <div id="vista-sub-silos">
+                    <div class="tarjeta-form">
+                        <h3><span class="material-symbols-outlined icono-tarjeta">inventory_2</span> Registrar Silobolsa</h3>
+                        <form id="form-silobolsa">
+                            <div class="input-grupo">
+                                <label for="campo-id-silo">Campo Asignado</label>
+                                <select id="campo-id-silo" required>
+                                    <option value="">Seleccionar campo...</option>
+                                </select>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="identificacion-sil">Identificación / Código</label>
+                                <input type="text" id="identificacion-sil" placeholder="Ej: Silo 1 - Lote Norte" required>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="tipo-grano-silo">Tipo de Grano</label>
+                                <select id="tipo-grano-silo" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="maiz">Maíz</option>
+                                    <option value="trigo">Trigo</option>
+                                    <option value="soja">Soja</option>
+                                    <option value="girasol">Girasol</option>
+                                    <option value="cebada">Cebada</option>
+                                </select>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="capacidad-toneladas">Capacidad (Toneladas)</label>
+                                <input type="number" id="capacidad-toneladas" step="0.1" placeholder="Ej: 200" required>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="fecha-instalacion-silo">Fecha de Instalación</label>
+                                <input type="date" id="fecha-instalacion-silo" required>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="estado-silo">Estado</label>
+                                <select id="estado-silo" required>
+                                    <option value="activo" selected>Activo</option>
+                                    <option value="inactivo">Inactivo / En Silado</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-principal" id="btn-guardar-silobolsa">Guardar Silobolsa</button>
+                        </form>
+                    </div>
+
+                    <div class="lista-container">
+                        <h3>Silobolsas Registradas</h3>
+                        <div id="contenedor-silobolsas"></div>
+                    </div>
+                </div>
+
+                <!-- VISTA 2: GESTIÓN DE VARAS / LANZAS -->
+                <div id="vista-sub-varas" class="seccion-oculta">
+                    <div class="tarjeta-form">
+                        <h3><span class="material-symbols-outlined icono-tarjeta">sensors</span> Asignar Vara / Lanza a Silobolsa</h3>
+                        <form id="form-vara">
+                            <div class="input-grupo">
+                                <label for="silo-id-vara">Silobolsa Objetivo</label>
+                                <select id="silo-id-vara" required>
+                                    <option value="">Seleccionar silobolsa...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-grupo">
+                                <label for="posicion-vara">Posición en el Silo</label>
+                                <select id="posicion-vara" required>
+                                    <option value="Cabecera">Cabecera</option>
+                                    <option value="Centro" selected>Centro</option>
+                                    <option value="Cola">Cola</option>
+                                </select>
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="fecha-instalacion-vara">Fecha de Instalación</label>
+                                <input type="date" id="fecha-instalacion-vara" required>
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="estado-operativo-vara">Estado Operativo</label>
+                                <select id="estado-operativo-vara" required>
+                                    <option value="activo" selected>Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn-principal" id="btn-guardar-vara">Asignar Vara</button>
+                        </form>
+                    </div>
+
+                    <div class="lista-container">
+                        <h3>Varas Sensoras Activas</h3>
+                        <div id="contenedor-varas"></div>
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             SIMULADOR
+        ========================================================= -->
+        <section id="simulacion" class="pantalla-seccion solo-admin seccion-oculta">
+            <header class="app-header header-con-volver">
+                <button type="button" class="btn-volver" onclick="navegarA('administrador')">
+                    <span class="material-symbols-outlined icono-btn">arrow_back</span> Admin
+                </button>
+                <h2>Simulador de Sensores</h2>
+                <button type="button" class="btn-logout-header" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined icono-btn">logout</span> Salir
+                </button>
+            </header>
+
+            <main class="app-contenido">
+                <div class="tarjeta-form">
+                    <h3><span class="material-symbols-outlined icono-tarjeta">science</span> Inyectar Medición de Prueba (Lanza / Sensores)</h3>
+                    <form id="form-simulacion">
+                        <div class="input-grupo">
+                            <label for="sim-silo">Silobolsa Objetivo</label>
+                            <select id="sim-silo" required>
+                                <option value="">Seleccionar silobolsa...</option>
+                            </select>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="sim-temp-interna">Temperatura Interna (°C)</label>
+                            <input type="number" id="sim-temp-interna" step="0.1" placeholder="Ej: 23.5" required>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="sim-hum-interna">Humedad Interna (%)</label>
+                            <input type="number" id="sim-hum-interna" min="0" max="100" step="0.1" placeholder="Ej: 65" required>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="sim-temp-externa">Temperatura Externa (°C)</label>
+                            <input type="number" id="sim-temp-externa" step="0.1" placeholder="Ej: 18.0" required>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="sim-hum-externa">Humedad Externa (%)</label>
+                            <input type="number" id="sim-hum-externa" min="0" max="100" step="0.1" placeholder="Ej: 70" required>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="sim-movimiento">Movimiento / Acelerómetro</label>
+                            <select id="sim-movimiento" required>
+                                <option value="false" selected>Normal</option>
+                                <option value="true">Movimiento Detectado</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-principal" id="btn-simular">Enviar Simulación a BD</button>
+                    </form>
+                </div>
+            </main>
+        </section>
+
+        <!-- =========================================================
+             MENÚ INFERIOR GLOBAL Y FIJO (Footer)
+        ========================================================= -->
+        <nav class="menu-inferior">
+            <a href="#" class="nav-item activo" onclick="navegarA('home')">
+                <span class="material-symbols-outlined">home</span><br>Inicio
+            </a>
+            <a href="#" class="nav-item" onclick="navegarA('alertas')">
+                <span class="material-symbols-outlined">notifications</span><br>Alertas
+            </a>
+            <a href="#" class="nav-item" onclick="navegarA('historial')">
+                <span class="material-symbols-outlined">history</span><br>Historial
+            </a>
+            <a href="https://wa.me/542494374820?text=Necesito%20asistencia%20tecnica%20por%20favor" target="_blank" class="nav-item">
+                <span class="material-symbols-outlined">support_agent</span><br>Soporte
+            </a>
+            <a href="#" class="nav-item" onclick="navegarA('ajustes')">
+                <span class="material-symbols-outlined">settings</span><br>Ajustes
+            </a>
+        </nav>
+
+    </div>
+
+    <!-- JS Principal -->
+   <!-- Script Principal como Módulo MVC -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
+
