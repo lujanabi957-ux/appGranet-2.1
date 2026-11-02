@@ -164,23 +164,41 @@ export function cambiarSubpestaniaSilos(subModo) {
     }
 }
 
-async function cargarSelectorCamposSilo() {
+export async function cargarSelectorCamposSilo() {
     const selectCampos = document.getElementById("campo-id-silo");
     if (!selectCampos) return;
 
     try {
-        const { data: campos } = await clienteSupabase.from("campo").select("id, nombre, ubicacion").order("nombre", { ascending: true });
+        const { data: campos, error } = await clienteSupabase
+            .from("campo")
+            .select("id, nombre, ubicacion, estado, cliente_id")
+            .order("nombre", { ascending: true });
+
+        if (error) {
+            console.error("Error al consultar la tabla campo:", error.message);
+            return;
+        }
+
         selectCampos.innerHTML = '<option value="">Seleccionar campo...</option>';
-        if (campos) {
+
+        if (campos && campos.length > 0) {
             campos.forEach((cmp) => {
                 const opcion = document.createElement("option");
-                opcion.value = cmp.id;
-                opcion.textContent = `${cmp.nombre} (${cmp.ubicacion})`;
+                opcion.value = cmp.id; 
+                
+                if (cmp.ubicacion && cmp.ubicacion.trim() !== "") {
+                    opcion.textContent = `${cmp.nombre} (${cmp.ubicacion})`;
+                } else {
+                    opcion.textContent = cmp.nombre;
+                }
+                
                 selectCampos.appendChild(opcion);
             });
+        } else {
+            console.warn("No hay registros cargados en la tabla 'campo'.");
         }
     } catch (e) {
-        console.error("Error al cargar selector de campos:", e);
+        console.error("Error inesperado al cargar selector de campos:", e);
     }
 }
 
@@ -224,7 +242,7 @@ export async function cargarSilobolsasAdmin() {
             const nombreCampo = silo.campo ? silo.campo.nombre : `Campo ID: ${silo.campo_id}`;
             const tarjeta = document.createElement("div");
             tarjeta.classList.add("tarjeta-cliente");
-            tarjeta.innerHTML = `<strong>📦 ${silo.identificacion_silo || 'Silo N° ' + silo.id}</strong> (${silo.estado || 'Activo'})<p><small>🌾 Grano: ${silo.tipo_grano ? silo.tipo_grano.toUpperCase() : 'N/D'} | Capacidad: ${silo.capacidad_toneladas || 0} Tn</small></p><p><small>📍 Campo: ${nombreCampo} | Instalado: ${silo.fecha_instalacion || 'N/D'}</small></p><button class="btn-eliminar" onclick="eliminarSilobolsa(${silo.id})">Borrar Silobolsa</button>`;
+            tarjeta.innerHTML = `<strong> ${silo.identificacion_silo || 'Silo N° ' + silo.id}</strong> (${silo.estado || 'Activo'})<p><small>🌾 Grano: ${silo.tipo_grano ? silo.tipo_grano.toUpperCase() : 'N/D'} | Capacidad: ${silo.capacidad_toneladas || 0} Tn</small></p><p><small>📍 Campo: ${nombreCampo} | Instalado: ${silo.fecha_instalacion || 'N/D'}</small></p><button class="btn-eliminar" onclick="eliminarSilobolsa(${silo.id})">Borrar Silobolsa</button>`;
             contenedor.appendChild(tarjeta);
         });
     } catch (e) {
